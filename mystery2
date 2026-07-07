@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mystery 2: The Vanishing Trophy</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Comic Sans MS', 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .wrap { max-width: 750px; margin: 0 auto; }
+  h1 { text-align: center; color: #1a3d6b; font-size: 2.1em; margin-bottom: 5px; }
+  .subtitle { text-align:center; color:#2c5282; margin-bottom: 25px; }
+  .card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  }
+  .card h2 { color:#2b6cb0; margin-bottom: 12px; }
+  #clue-list li { margin: 10px 0; padding-left: 5px; line-height: 1.5; }
+  .suspects { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:15px; }
+  .suspect {
+    background: #ebf8ff;
+    border: 3px solid #bee3f8;
+    border-radius: 16px;
+    padding: 15px;
+    text-align:center;
+    cursor:pointer;
+    transition: transform 0.15s, border-color 0.15s, opacity 0.2s;
+  }
+  .suspect:hover { transform: scale(1.05); border-color:#4299e1; }
+  .suspect.selected { border-color:#2b6cb0; background:#bee3f8; }
+  .suspect.crossed { opacity: 0.3; text-decoration: line-through; }
+  .emoji { font-size: 3em; }
+  .facts-list { text-align:left; font-size:0.85em; color:#555; margin-top:8px; }
+  .toggle-out {
+    margin-top: 8px;
+    font-size: 0.75em;
+    background: #e2e8f0;
+    border: none;
+    color: #333;
+    padding: 4px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button.main-btn {
+    background:#4299e1;
+    color:white;
+    border:none;
+    padding:12px 24px;
+    border-radius:12px;
+    font-size:1em;
+    cursor:pointer;
+    font-weight:bold;
+    margin-top:15px;
+    margin-right: 10px;
+  }
+  button.main-btn:hover { background:#2b6cb0; }
+  #result {
+    display:none;
+    font-size:1.05em;
+    padding:20px;
+    border-radius:16px;
+    margin-top:15px;
+    line-height: 1.6;
+  }
+  .win { background:#d4f7dc; color:#1a7431; }
+  .lose { background:#ffd6d6; color:#a11d1d; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏆 Mystery 2: The Vanishing Trophy 🕵️</h1>
+  <p class="subtitle">The school's Golden Trophy disappeared from the display case between 3:00pm and 3:30pm. Who took it?</p>
+
+  <div class="card">
+    <h2>🔍 The Facts</h2>
+    <ul id="clue-list">
+      <li>1️⃣ The display case was locked, but the janitor's master key was used — it was on the front desk from 2:45pm–3:45pm.</li>
+      <li>2️⃣ Whoever took it left a trail of glitter footprints (from the art room craft table).</li>
+      <li>3️⃣ Coach Reyes was running practice on the field the ENTIRE time, seen by 12 students.</li>
+      <li>4️⃣ Ms. Patel was in a parent meeting in the office from 2:30pm–4:00pm, confirmed by the front-desk sign-in sheet.</li>
+      <li>5️⃣ Only students in the Art Club were using glitter that day, for a poster project.</li>
+      <li>6️⃣ Danny was home sick that whole day — confirmed by the school nurse's log.</li>
+      <li>7️⃣ Priya is in Art Club, but she was in the library from 2:45pm–3:30pm (library sign-in sheet).</li>
+      <li>8️⃣ Sam is in Art Club and has no alibi for 3:00pm–3:30pm.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>😮 Suspects</h2>
+    <p style="margin-bottom:10px; color:#666; font-size:0.9em;">Click a suspect to select them as your final answer. Use the ✅ button to mark who you've ruled OUT as you go.</p>
+    <div class="suspects" id="suspects"></div>
+  </div>
+
+  <div class="card">
+    <h2>👉 Who Took the Trophy?</h2>
+    <p>Click your final suspect above, then press the button.</p>
+    <button class="main-btn" id="guessBtn">I Solved It!</button>
+    <div id="result"></div>
+    <button class="main-btn" id="playAgain" style="display:none; background:#38a169;">🔁 Play Again</button>
+  </div>
+</div>
+
+<script>
+  const suspects = [
+    { name: "Coach Reyes", emoji: "🏃", facts: "Ran practice, seen by 12 students", culprit: false },
+    { name: "Ms. Patel", emoji: "👩‍🏫", facts: "In a parent meeting 2:30–4:00pm", culprit: false },
+    { name: "Danny", emoji: "🤒", facts: "Home sick, per nurse's log", culprit: false },
+    { name: "Priya", emoji: "👧", facts: "In Art Club, but in library 2:45–3:30pm", culprit: false },
+    { name: "Sam", emoji: "🧑", facts: "In Art Club, no alibi 3:00–3:30pm", culprit: true },
+    { name: "The Janitor", emoji: "🧹", facts: "Key was on the desk, not with him", culprit: false }
+  ];
+
+  let selected = null;
+  let crossedOut = new Set();
+
+  function startGame() {
+    selected = null;
+    crossedOut = new Set();
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('playAgain').style.display = 'none';
+    document.getElementById('guessBtn').style.display = 'inline-block';
+    render();
+  }
+
+  function render() {
+    const container = document.getElementById('suspects');
+    container.innerHTML = '';
+    suspects.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'suspect' + (crossedOut.has(s.name) ? ' crossed' : '') + (selected && selected.name === s.name ? ' selected' : '');
+      div.innerHTML = `
+        <div class="emoji">${s.emoji}</div>
+        <div><b>${s.name}</b></div>
+        <div class="facts-list">${s.facts}</div>
+        <button class="toggle-out" data-name="${s.name}">${crossedOut.has(s.name) ? '↩️ Un-cross' : '✅ Rule out'}</button>
+      `;
+      div.addEventListener('click', (e) => {
+        if (e.target.classList.contains('toggle-out')) return;
+        selected = s;
+        render();
+      });
+      container.appendChild(div);
+    });
+
+    document.querySelectorAll('.toggle-out').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const name = btn.dataset.name;
+        if (crossedOut.has(name)) crossedOut.delete(name);
+        else crossedOut.add(name);
+        render();
+      });
+    });
+  }
+
+  document.getElementById('guessBtn').addEventListener('click', () => {
+    if (!selected) {
+      alert("Pick a suspect first! 🔎 Use the facts to rule people out.");
+      return;
+    }
+    const result = document.getElementById('result');
+    result.style.display = 'block';
+    const culprit = suspects.find(s => s.culprit);
+    if (selected.name === culprit.name) {
+      result.className = 'win';
+      result.innerHTML = `🎉 <b>Correct!</b> ${culprit.emoji} ${culprit.name} took the trophy!<br><br>
+        <b>Why:</b> Coach Reyes had 12 witnesses, Ms. Patel was signed into a meeting, Danny was home sick, and the janitor's key never left the front desk. The glitter trail (fact 2) points to Art Club (fact 5) — but Priya was signed into the library the whole time (fact 7). That leaves only Sam, who has no alibi at all!`;
+    } else {
+      result.className = 'lose';
+      result.innerHTML = `❌ Not quite! Try combining facts:<br><br>
+        • Facts 1, 3, 4, 6 give solid alibis for the Janitor, Coach Reyes, Ms. Patel, and Danny<br>
+        • Facts 2 + 5 narrow it down to someone in Art Club<br>
+        • Fact 7 rules out Priya specifically<br>
+        Only one Art Club member is left with no alibi. Try again!`;
+    }
+    document.getElementById('guessBtn').style.display = 'none';
+    document.getElementById('playAgain').style.display = 'inline-block';
+  });
+
+  document.getElementById('playAgain').addEventListener('click', startGame);
+
+  startGame();
+</script>
+</body>
+</html>
