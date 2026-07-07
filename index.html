@@ -1,10 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>My First Website</title>
+  <meta charset="UTF-8">
+  <title>Sugar's Website</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      background: white;
+      padding: 50px 40px;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+      max-width: 500px;
+    }
+
+    h1 {
+      color: #333;
+      font-size: 2.2em;
+      margin-bottom: 15px;
+    }
+
+    p {
+      color: #666;
+      font-size: 1.1em;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #764ba2;
+      color: white;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 0.9em;
+    }
+  </style>
 </head>
 <body>
-  <h1>Hello, World!</h1>
-  <p>This is my first website, hosted on GitHub Pages.</p>
+  <div class="container">
+    <h1>👋 Hi, I'm Sugar</h1>
+    <p>This is my first website, and I built it myself using GitHub Pages. Learning how the web works, one commit at a time.</p>
+    <span class="badge">🚀 Just getting started</span>
+  </div>
 </body>
 </html>
