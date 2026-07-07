@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Murder Mystery</title>
+<script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+       
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: #000;
+            color: #fff;
+        }
+        .typewriter {
+            border-right: 3px solid #f8fafc;
+            animation: blink-caret 0.75s step-end infinite;
+        }
+       
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #f8fafc; }
+        }
+        .crime-scene {
+            background-color: #111;
+            border-left: 4px solid #3b82f6;
+        }
+        .suspect-chat {
+            display: none;
+        }
+        .suspect-chat.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="mb-12 text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4 text-white">AI Murder Mystery</h1>
+<p class="text-xl text-gray-400">AI Detective Game</p>
+            <button onclick="window.location.reload()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                <i data-feather="refresh-cw" class="inline mr-2"></i> Restart Case
+            </button>
+        </header>
+
+        <!-- Game Container -->
+        <div class="max-w-4xl mx-auto">
+            <!-- Crime Scene -->
+            <div class="crime-scene rounded-lg p-6 mb-8 shadow-lg border border-slate-700">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-amber-400">Crime Scene</h2>
+                    <span class="px-3 py-1 bg-red-900 text-red-100 rounded-full text-sm">Active Case</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-800 bg-opacity-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-medium text-slate-200 mb-2">Scene Details</h3>
+                        <p id="crime-description" class="text-slate-300 typewriter">Loading crime scene details...</p>
+                    </div>
+                    <div class="bg-slate-800 bg-opacity-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-medium text-slate-200 mb-2">Evidence Found</h3>
+                        <ul id="evidence-list" class="space-y-2 text-slate-300">
+                            <li class="flex items-center"><i data-feather="search" class="mr-2 w-4 h-4"></i> Loading evidence...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suspects -->
+            <div class="bg-slate-800 rounded-lg p-6 mb-8 shadow-lg border border-slate-700">
+                <h2 class="text-2xl font-semibold text-amber-400 mb-6">Suspects</h2>
+                <div id="suspects-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="bg-slate-700 rounded-lg p-4 animate-pulse">
+                        <div class="h-40 bg-slate-600 rounded mb-3"></div>
+                        <div class="h-4 bg-slate-600 rounded w-3/4 mb-2"></div>
+                        <div class="h-3 bg-slate-600 rounded w-1/2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interrogation -->
+            <div class="bg-slate-800 rounded-lg p-6 shadow-lg border border-slate-700">
+                <h2 class="text-2xl font-semibold text-amber-400 mb-4">Interrogation Room</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-1 bg-slate-700 rounded-lg p-4">
+                        <div id="suspect-display" class="text-center">
+                            <div class="text-9xl mx-auto mb-4">👤</div>
+                            <h3 id="current-suspect" class="text-xl font-medium text-slate-200">Select a suspect</h3>
+                            <p id="suspect-bio" class="text-slate-300 mt-2">No suspect selected</p>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <!-- Chat containers for each suspect will be generated here -->
+                        <div id="chat-containers"></div>
+                        
+                        <div class="flex">
+                            <input id="message-input" type="text" placeholder="Ask a question..."
+                                   class="flex-grow bg-slate-700 text-slate-200 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <button id="send-button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-lg transition">
+                                <i data-feather="send" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Detective's Notebook -->
+        <div class="max-w-4xl mx-auto mt-12 bg-slate-800 rounded-lg p-6 shadow-lg border border-slate-700">
+            <h2 class="text-2xl font-semibold text-amber-400 mb-4">Detective's Notebook</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-medium text-slate-200 mb-2">My Notes</h3>
+                    <textarea id="detective-notes" placeholder="Write your case notes here..." class="bg-slate-700 text-slate-200 rounded-lg px-4 py-2 w-full h-64 focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-slate-200 mb-2">Accusation</h3>
+                    <div class="flex flex-col space-y-4">
+                        <select id="suspect-select" class="bg-slate-700 text-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <option value="">Select a suspect</option>
+                        </select>
+                        <textarea id="accusation-reason" placeholder="Explain your reasoning..." class="bg-slate-700 text-slate-200 rounded-lg px-4 py-2 h-24 focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                        <button id="make-accusation" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition font-bold">🔎 MAKE ACCUSATION</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+
+    <script>
+        // Main game script
+        document.addEventListener('DOMContentLoaded', async () => {
+            feather.replace();
+            // List of possible themes
+            const themes = [
+                "Skorea",
+                "Ballad of Matthew",
+                "Roadside Chuck's relatives",
+                "ACC",
+                "Other people",
+                "CyberWorld profiles",
+                "Mixed",
+                "You have creative freedom",
+                "Hacker",
+                "Family feud",
+                "ACC",
+                "Epstein island",
+                "Space",
+                "Random",
+                "Random1",
+                "Random2",
+                "Random3",
+                "AI",
+            ];
+            // Function to pick a random theme
+            function getRandomTheme() {
+                const index = Math.floor(Math.random() * themes.length);
+                return themes[index];
+            }
+           
+            // Try to load Gradio client
+            let Client = null;
+            try {
+                const mod = await import("https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js");
+                Client = mod.Client;
+            } catch (e) {
+                console.warn("Gradio Client module failed to load (this is non-fatal):", e);
+                Client = null;
+            }
+            // Game state
+            const gameState = {
+                currentCase: null,
+                suspects: [],
+                evidence: [],
+                currentSuspect: null,
+                discoveredClues: [],
+                isSolving: false,
+                suspectChats: {} // Stores chat history for each suspect
+            };
+            // DOM elements
+            const elements = {
+                crimeDescription: document.getElementById('crime-description'),
+                evidenceList: document.getElementById('evidence-list'),
+                suspectsContainer: document.getElementById('suspects-container'),
+                suspectDisplay: document.getElementById('suspect-display'),
+                currentSuspect: document.getElementById('current-suspect'),
+                suspectBio: document.getElementById('suspect-bio'),
+                chatContainers: document.getElementById('chat-containers'),
+                messageInput: document.getElementById('message-input'),
+                sendButton: document.getElementById('send-button'),
+                detectiveNotes: document.getElementById('detective-notes'),
+                suspectSelect: document.getElementById('suspect-select'),
+                accusationReason: document.getElementById('accusation-reason'),
+                makeAccusation: document.getElementById('make-accusation')
+};
+            // Initialize game
+            async function initGame() {
+                const theme = getRandomTheme();
+                console.log("Selected Theme:", theme);
+                document.querySelector('header p').textContent = `AI-Powered Detective Game`;
+                
+                let attempts = 0;
+                const maxAttempts = 3;
+                
+                while (attempts < maxAttempts) {
+                    try {
+                        if (Client) {
+                            const client = await Client.connect("TejAndrewsACC/MME");
+                            const result = await client.predict("/chat", {
+                                message: `Generate a murder mystery scenario in the ${theme} theme. with exactly 3 suspects, a crime scene description, and exactly 3 pieces of evidence. Make sure the evidence doesn't make it obvious who did it, but is still somewhat helpful. Format as strict JSON with these fields: crime_description (string), suspects (array of objects with name, bio, emoji), evidence (array of strings). Randomly select one suspect to be the murderer (add isMurderer:true). Respond ONLY with valid JSON. Example format:\n\n{\n  \"crime_description\": \"...\",\n  \"suspects\": [\n    {\"name\": \"...\", \"bio\": \"...\", \"emoji\": \"...\", \"isMurderer\": false},\n    ...\n  ],\n  \"evidence\": [\"...\", \"...\", \"...\"]\n}`
+                            });
+                            
+                            const data = JSON.parse(result.data);
+                            gameState.currentCase = data;
+                            gameState.suspects = data.suspects;
+                            gameState.evidence = data.evidence;
+                            
+                            // Randomly select the murderer
+                            const murdererIndex = Math.floor(Math.random() * gameState.suspects.length);
+                            gameState.suspects[murdererIndex].isMurderer = true;
+                            
+                            renderGame();
+                            return; // Success - exit the function
+                        } else {
+                            break; // No client - break to fallback
+                        }
+                    } catch (error) {
+                        console.error(`Attempt ${attempts + 1} failed:`, error);
+                        attempts++;
+                        if (attempts >= maxAttempts) break;
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+                    }
+                }
+                
+                // If we get here, all attempts failed or no client
+                useFallbackData();
+            }
+function useFallbackData() {
+                gameState.currentCase = {
+                    crime_description: "The CEO was found dead in the office after hours. The security system was disabled, and the victim's computer was logged into their bank account.",
+                    suspects: [
+                        {
+                            name: "Alex Morgan",
+                            bio: "The CFO. Had financial disputes with the victim. Was last seen near the office.",
+                            emoji: "👨‍💼",
+                            isMurderer: false
+                        },
+                        {
+                            name: "Taylor Smith",
+                            bio: "The IT admin. Had full access to security systems. Acting nervous lately.",
+                            emoji: "👩‍💻",
+                            isMurderer: true
+                        },
+                        {
+                            name: "Jordan Lee",
+                            bio: "The assistant. Stood to inherit the victim's shares. Alibi is shaky.",
+                            emoji: "👨‍⚖️",
+                            isMurderer: false
+                        }
+                    ],
+                    evidence: [
+                        "Security logs show system was disabled at 9:15pm",
+                        "A coffee cup with traces of sedatives",
+                        "An encrypted file on the victim's computer"
+                    ]
+                };
+               
+                gameState.suspects = gameState.currentCase.suspects;
+                gameState.evidence = gameState.currentCase.evidence;
+               
+                const murdererIndex = Math.floor(Math.random() * gameState.suspects.length);
+                gameState.suspects[murdererIndex].isMurderer = true;
+               
+                renderGame();
+            }
+            function renderGame() {
+                elements.crimeDescription.textContent = gameState.currentCase.crime_description;
+                elements.crimeDescription.classList.remove('typewriter');
+               
+                elements.evidenceList.innerHTML = '';
+                gameState.evidence.forEach(evidence => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center evidence-item';
+                    li.innerHTML = `<i data-feather="search" class="mr-2 w-4 h-4"></i> ${evidence}`;
+                    elements.evidenceList.appendChild(li);
+                });
+                feather.replace();
+               
+                elements.suspectsContainer.innerHTML = '';
+                gameState.suspects.forEach(suspect => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-700 hover:bg-slate-600 rounded-lg p-4 transition cursor-pointer suspect-card';
+                    card.innerHTML = `
+                        <div class="text-6xl mb-3 text-center floating-emoji">${suspect.emoji}</div>
+                        <h3 class="text-lg font-medium text-white">${suspect.name}</h3>
+                        <p class="text-sm text-gray-400">${suspect.bio}</p>
+                    `;
+                    card.addEventListener('click', () => selectSuspect(suspect));
+                    elements.suspectsContainer.appendChild(card);
+                    
+                    // Initialize chat container for this suspect if it doesn't exist
+                    if (!gameState.suspectChats[suspect.name]) {
+                        gameState.suspectChats[suspect.name] = {
+                            messages: [],
+                            container: null
+                        };
+                    }
+                });
+               
+                // Create chat containers for each suspect
+                elements.chatContainers.innerHTML = '';
+                gameState.suspects.forEach(suspect => {
+                    const chatContainer = document.createElement('div');
+                    chatContainer.id = `chat-${suspect.name.replace(/\s+/g, '-').toLowerCase()}`;
+                    chatContainer.className = 'suspect-chat bg-slate-900 rounded-lg p-4 h-64 overflow-y-auto mb-4';
+                    
+                    // Add initial message if this is a new chat
+                    if (gameState.suspectChats[suspect.name].messages.length === 0) {
+                        gameState.suspectChats[suspect.name].messages.push({
+                            sender: 'detective',
+                            message: `Hello ${suspect.name}, I'd like to ask you some questions about the incident.`
+                        });
+                    }
+                    
+                    // Render existing messages
+                    gameState.suspectChats[suspect.name].messages.forEach(msg => {
+                        addChatMessageToContainer(chatContainer, msg.sender, msg.message);
+                    });
+                    
+                    elements.chatContainers.appendChild(chatContainer);
+                    gameState.suspectChats[suspect.name].container = chatContainer;
+                });
+               
+                elements.suspectSelect.innerHTML = '<option value="">Select a suspect</option>';
+                gameState.suspects.forEach(suspect => {
+                    const option = document.createElement('option');
+                    option.value = suspect.name;
+                    option.textContent = suspect.name;
+                    elements.suspectSelect.appendChild(option);
+                });
+               
+                updateCluesList();
+            }
+            function selectSuspect(suspect) {
+                gameState.currentSuspect = suspect;
+               
+                elements.currentSuspect.textContent = suspect.name;
+                elements.suspectBio.textContent = suspect.bio;
+                elements.suspectDisplay.querySelector('div').textContent = suspect.emoji;
+                
+                // Hide all chat containers
+                document.querySelectorAll('.suspect-chat').forEach(chat => {
+                    chat.classList.remove('active');
+                });
+                
+                // Show the selected suspect's chat container
+                const chatId = `chat-${suspect.name.replace(/\s+/g, '-').toLowerCase()}`;
+                const chatContainer = document.getElementById(chatId);
+                if (chatContainer) {
+                    chatContainer.classList.add('active');
+                }
+               
+                elements.messageInput.focus();
+            }
+            function addChatMessageToContainer(container, sender, message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `mb-3 chat-message ${sender === 'detective' ? 'text-right' : 'text-left'}`;
+                const bubble = document.createElement('div');
+                bubble.className = `inline-block px-4 py-2 rounded-lg max-w-xs md:max-w-md ${sender === 'detective' ? 'bg-amber-600 text-white' : 'bg-slate-700 text-slate-200'}`;
+                bubble.textContent = message;
+               
+                messageDiv.appendChild(bubble);
+                container.appendChild(messageDiv);
+                container.scrollTop = container.scrollHeight;
+            }
+            function addChatMessage(sender, message) {
+                if (!gameState.currentSuspect) return;
+                
+                const chatId = `chat-${gameState.currentSuspect.name.replace(/\s+/g, '-').toLowerCase()}`;
+                const chatContainer = document.getElementById(chatId);
+                
+                if (chatContainer) {
+                    addChatMessageToContainer(chatContainer, sender, message);
+                }
+                
+                // Store message in game state
+                gameState.suspectChats[gameState.currentSuspect.name].messages.push({
+                    sender: sender,
+                    message: message
+                });
+            }
+            async function sendMessage() {
+                const message = elements.messageInput.value.trim();
+                if (!message || !gameState.currentSuspect) return;
+               
+                addChatMessage('detective', message);
+                elements.messageInput.value = '';
+               
+                const typingIndicator = document.createElement('div');
+                typingIndicator.className = 'text-left mb-3';
+                typingIndicator.innerHTML = `
+                    <div class="inline-block px-4 py-2 rounded-lg bg-slate-700 text-slate-200">
+                        <div class="flex space-x-1">
+                            <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                            <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                            <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                        </div>
+                    </div>
+                `;
+                
+                const chatId = `chat-${gameState.currentSuspect.name.replace(/\s+/g, '-').toLowerCase()}`;
+                const chatContainer = document.getElementById(chatId);
+                chatContainer.appendChild(typingIndicator);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+               
+                try {
+                    let response;
+                    if (Client) {
+                        const client = await Client.connect("TejAndrewsACC/MME");
+                        const result = await client.predict("/chat", {
+                            message: `You are ${gameState.currentSuspect.name}, a suspect in a murder investigation. ${gameState.currentSuspect.isMurderer ? 'You are actually the murderer but trying to hide it.' : 'You are innocent but may have information.'} Respond to the detective's question: "${message}". Keep your response under 2 sentences.`
+                        });
+                        response = result.data;
+                    } else {
+                        const responses = gameState.currentSuspect.isMurderer
+                            ? [
+                                "I don't know anything about it.",
+                                "I was alone at the time.",
+                                "You can't prove anything!",
+                                "I want my lawyer.",
+                                "That's a ridiculous accusation."
+                            ]
+                            : [
+                                "I saw something suspicious...",
+                                "I heard unusual noises.",
+                                "I don't know anything helpful.",
+                                "Maybe check the security cameras?",
+                                "I was with someone else at the time."
+                            ];
+                        response = responses[Math.floor(Math.random() * responses.length)];
+                    }
+                   
+                    chatContainer.removeChild(typingIndicator);
+                    addChatMessage('suspect', response);
+                   
+                    // AI decides if this message triggered a new clue
+                    if (shouldTriggerClue(response)) {
+                        discoverClue();
+                    }
+                } catch (error) {
+                    console.error("Error getting response:", error);
+                    chatContainer.removeChild(typingIndicator);
+                    addChatMessage('suspect', "I don't wish to answer that question.");
+                }
+            }
+            function shouldTriggerClue(response) {
+                // Simple heuristic - if the response contains certain keywords or is longer than a certain length
+                const clueTriggers = ['saw', 'heard', 'notice', 'remember', 'think', 'suspicious', 'unusual', 'yes'];
+                return clueTriggers.some(trigger => response.toLowerCase().includes(trigger)) || 
+                       response.length > 50;
+            }
+            function discoverClue() {
+                if (gameState.discoveredClues.length >= gameState.evidence.length) return;
+               
+                const undiscovered = gameState.evidence.filter(e =>
+                    !gameState.discoveredClues.includes(e)
+                );
+               
+                if (undiscovered.length > 0) {
+                    const clue = undiscovered[0];
+                    gameState.discoveredClues.push(clue);
+                   
+                    const discovery = document.createElement('div');
+                    discovery.className = 'text-center my-3';
+                    discovery.innerHTML = `
+                        <div class="inline-block px-4 py-2 rounded-lg bg-green-900 text-green-200 text-sm">
+                            <i data-feather="alert-circle" class="inline mr-1 w-4 h-4"></i> New clue discovered!
+                        </div>
+                    `;
+                    
+                    const chatId = `chat-${gameState.currentSuspect.name.replace(/\s+/g, '-').toLowerCase()}`;
+                    const chatContainer = document.getElementById(chatId);
+                    chatContainer.appendChild(discovery);
+                    feather.replace();
+                   
+                    updateCluesList();
+                }
+            }
+            // Load saved notes from localStorage
+            if (localStorage.getItem('detectiveNotes')) {
+                elements.detectiveNotes.value = localStorage.getItem('detectiveNotes');
+            }
+            // Save notes to localStorage when changed
+            elements.detectiveNotes.addEventListener('input', () => {
+                localStorage.setItem('detectiveNotes', elements.detectiveNotes.value);
+            });
+            function updateCluesList() {
+                // Clues are now shown in the chat interface when discovered
+            }
+function makeAccusation() {
+                const accused = elements.suspectSelect.value;
+                const reason = elements.accusationReason.value.trim();
+               
+                if (!accused || !reason) {
+                    alert("Please select a suspect and provide your reasoning!");
+                    return;
+                }
+               
+                gameState.isSolving = true;
+               
+                const suspect = gameState.suspects.find(s => s.name === accused);
+                const isCorrect = suspect.isMurderer;
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
+                resultDiv.innerHTML = `
+                    <div class="bg-slate-800 rounded-lg p-8 max-w-md mx-4 text-center ${isCorrect ? 'accusation-correct' : 'accusation-incorrect'}">
+                        <h2 class="text-2xl font-bold mb-4 ${isCorrect ? 'text-green-400' : 'text-red-400'}">
+${isCorrect ? 'Case Solved!' : 'Wrong Accusation!'}
+                        </h2>
+                        <p class="mb-6 text-slate-300 text-lg">
+                            ${isCorrect
+                                ? '🔍 Brilliant detective work! You correctly identified the murderer. 🔍'
+                                : '❌ Unfortunately, your accusation was incorrect. The real murderer remains at large. ❌'}
+                        </p>
+                        ${isCorrect ? '' : `<p class="text-amber-400 mb-4">The real murderer was ${gameState.suspects.find(s => s.isMurderer).name}.</p>`}
+                        <button onclick="window.location.reload()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition transform hover:scale-105">
+                            <i data-feather="refresh-cw" class="inline mr-2"></i> Play Again
+                        </button>
+</div>
+                `;
+               
+                document.body.appendChild(resultDiv);
+            }
+            // Event listeners
+            elements.sendButton.addEventListener('click', sendMessage);
+            elements.messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+            elements.makeAccusation.addEventListener('click', makeAccusation);
+            // Start the game
+            initGame();
+        });
+    </script>
+<script src="www.algorithmiccomputer-generatedconsciousness.com"></script>
+</body>
+</html>
