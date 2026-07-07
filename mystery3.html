@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mystery 3: The Logic Grid Detective</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Comic Sans MS', 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #d9afd9 0%, #97d9e1 100%);
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .wrap { max-width: 800px; margin: 0 auto; }
+  h1 { text-align: center; color: #3d2a5c; font-size: 2em; margin-bottom: 5px; }
+  .subtitle { text-align:center; color:#4a3b6b; margin-bottom: 20px; }
+  .card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  }
+  .card h2 { color:#7c3aed; margin-bottom: 12px; }
+  #clue-list li { margin: 8px 0; line-height: 1.5; }
+  table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+  th, td { border: 2px solid #e0d5f5; text-align:center; padding: 8px; }
+  th { background:#f3e8ff; color:#5b21b6; font-size:0.85em; }
+  td.name-cell { background:#faf5ff; font-weight:bold; color:#4c1d95; font-size:0.85em; }
+  td.grid-cell {
+    cursor:pointer;
+    font-size:1.3em;
+    width: 50px;
+    user-select:none;
+    transition: background 0.15s;
+  }
+  td.grid-cell:hover { background:#ede9fe; }
+  .instructions { font-size:0.85em; color:#666; margin-bottom:10px; }
+  select {
+    padding:8px 12px;
+    border-radius:8px;
+    border:2px solid #d8b4fe;
+    font-size:1em;
+    margin: 5px 10px 5px 0;
+  }
+  button.main-btn {
+    background:#8b5cf6;
+    color:white;
+    border:none;
+    padding:12px 24px;
+    border-radius:12px;
+    font-size:1em;
+    cursor:pointer;
+    font-weight:bold;
+    margin-top:15px;
+    margin-right: 10px;
+  }
+  button.main-btn:hover { background:#7c3aed; }
+  #result {
+    display:none;
+    font-size:1.05em;
+    padding:20px;
+    border-radius:16px;
+    margin-top:15px;
+    line-height: 1.6;
+  }
+  .win { background:#d4f7dc; color:#1a7431; }
+  .lose { background:#ffd6d6; color:#a11d1d; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧩 Mystery 3: The Logic Grid Detective 🕵️</h1>
+  <p class="subtitle">Someone broke Grandma's favorite lamp! Match each suspect to the ROOM they were really in using the facts and the grid.</p>
+
+  <div class="card">
+    <h2>🔍 The Facts</h2>
+    <ul id="clue-list">
+      <li>1️⃣ The lamp broke in a room with a WINDOW, sometime around 5:00pm.</li>
+      <li>2️⃣ Zoe was doing homework — and her room has no window, just a closet.</li>
+      <li>3️⃣ Whoever was in the Kitchen was helping cook dinner from 4:30–5:30pm.</li>
+      <li>4️⃣ Ben was seen in the Garage fixing his bike the whole afternoon.</li>
+      <li>5️⃣ Grandma herself was cooking dinner in the Kitchen the whole time (so she's not a suspect for the Living Room).</li>
+      <li>6️⃣ The Living Room has a big window looking out to the yard.</li>
+      <li>7️⃣ Leo wasn't helping cook, and he wasn't near his bike either.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>📋 Detective's Grid</h2>
+    <p class="instructions">Click a box to cycle through: blank → ❌ (No) → ✅ (Yes) → blank. Use this to eliminate rooms for each suspect!</p>
+    <table id="grid-table"></table>
+  </div>
+
+  <div class="card">
+    <h2>👉 Solve the Case</h2>
+    <p>Who broke the lamp, and in which room?</p>
+    <div>
+      <select id="suspectSelect">
+        <option value="">-- Choose Suspect --</option>
+      </select>
+      <select id="roomSelect">
+        <option value="">-- Choose Room --</option>
+      </select>
+    </div>
+    <button class="main-btn" id="guessBtn">I Solved It!</button>
+    <div id="result"></div>
+    <button class="main-btn" id="playAgain" style="display:none; background:#38a169;">🔁 Play Again</button>
+  </div>
+</div>
+
+<script>
+  const suspects = ["Zoe", "Ben", "Leo", "Grandma"];
+  const rooms = ["Living Room (window)", "Kitchen", "Garage", "Zoe's Room (no window)"];
+
+  // The real answer: Leo broke the lamp in the Living Room
+  const answer = { suspect: "Leo", room: "Living Room (window)" };
+
+  let cellStates = {}; // key: "suspect|room" -> 0 blank, 1 no, 2 yes
+
+  function cellKey(s, r) { return s + "|" + r; }
+
+  function buildTable() {
+    const table = document.getElementById('grid-table');
+    table.innerHTML = '';
+
+    const headerRow = document.createElement('tr');
+    headerRow.innerHTML = '<th></th>' + rooms.map(r => `<th>${r}</th>`).join('');
+    table.appendChild(headerRow);
+
+    suspects.forEach(s => {
+      const row = document.createElement('tr');
+      let rowHTML = `<td class="name-cell">${s}</td>`;
+      rooms.forEach(r => {
+        const key = cellKey(s, r);
+        if (!(key in cellStates)) cellStates[key] = 0;
+        rowHTML += `<td class="grid-cell" data-suspect="${s}" data-room="${r}"></td>`;
+      });
+      row.innerHTML = rowHTML;
+      table.appendChild(row);
+    });
+
+    document.querySelectorAll('.grid-cell').forEach(cell => {
+      updateCellDisplay(cell);
+      cell.addEventListener('click', () => {
+        const key = cellKey(cell.dataset.suspect, cell.dataset.room);
+        cellStates[key] = (cellStates[key] + 1) % 3;
+        updateCellDisplay(cell);
+      });
+    });
+  }
+
+  function updateCellDisplay(cell) {
+    const key = cellKey(cell.dataset.suspect, cell.dataset.room);
+    const state = cellStates[key];
+    cell.textContent = state === 0 ? '' : state === 1 ? '❌' : '✅';
+  }
+
+  function populateSelects() {
+    const sSel = document.getElementById('suspectSelect');
+    suspects.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      sSel.appendChild(opt);
+    });
+    const rSel = document.getElementById('roomSelect');
+    rooms.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r; opt.textContent = r;
+      rSel.appendChild(opt);
+    });
+  }
+
+  function startGame() {
+    cellStates = {};
+    buildTable();
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('playAgain').style.display = 'none';
+    document.getElementById('guessBtn').style.display = 'inline-block';
+    document.getElementById('suspectSelect').value = '';
+    document.getElementById('roomSelect').value = '';
+  }
+
+  document.getElementById('guessBtn').addEventListener('click', () => {
+    const s = document.getElementById('suspectSelect').value;
+    const r = document.getElementById('roomSelect').value;
+    if (!s || !r) {
+      alert("Pick both a suspect AND a room! 🔎");
+      return;
+    }
+    const result = document.getElementById('result');
+    result.style.display = 'block';
+    if (s === answer.suspect && r === answer.room) {
+      result.className = 'win';
+      result.innerHTML = `🎉 <b>Correct!</b> ${answer.suspect} broke the lamp in the ${answer.room}!<br><br>
+        <b>How to solve it:</b><br>
+        • Fact 1 + 6: the lamp broke in the Living Room (the room with the window)<br>
+        • Fact 5: Grandma was in the Kitchen the whole time, so it's not her<br>
+        • Fact 2: Zoe's room has no window, so she can't be the Living Room person<br>
+        • Fact 4: Ben was in the Garage the whole time<br>
+        • That leaves only Leo — and fact 7 confirms he wasn't cooking or with his bike, so he's free to be in the Living Room!`;
+    } else {
+      result.className = 'lose';
+      result.innerHTML = `❌ Not quite! Try using the grid: mark ❌ for every suspect+room combo a fact rules out, and see which ONE box is left open for each suspect. Try again!`;
+    }
+    document.getElementById('guessBtn').style.display = 'none';
+    document.getElementById('playAgain').style.display = 'inline-block';
+  });
+
+  document.getElementById('playAgain').addEventListener('click', startGame);
+
+  populateSelects();
+  startGame();
+</script>
+</body>
+</html>
