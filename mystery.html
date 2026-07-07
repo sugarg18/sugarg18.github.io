@@ -13,12 +13,7 @@
     padding: 20px;
   }
   .wrap { max-width: 700px; margin: 0 auto; }
-  h1 {
-    text-align: center;
-    color: #6b3e26;
-    font-size: 2.2em;
-    margin-bottom: 5px;
-  }
+  h1 { text-align: center; color: #6b3e26; font-size: 2.2em; margin-bottom: 5px; }
   .subtitle { text-align:center; color:#8a5a3a; margin-bottom: 25px; }
   .card {
     background: white;
@@ -28,7 +23,7 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
   }
   .card h2 { color:#d2691e; margin-bottom: 12px; }
-  #clue-list li { margin: 8px 0; padding-left: 5px; }
+  #clue-list li { margin: 10px 0; padding-left: 5px; line-height: 1.4; }
   .suspects { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:15px; }
   .suspect {
     background: #fff7ed;
@@ -37,11 +32,13 @@
     padding: 15px;
     text-align:center;
     cursor:pointer;
-    transition: transform 0.15s, border-color 0.15s;
+    transition: transform 0.15s, border-color 0.15s, opacity 0.2s;
   }
   .suspect:hover { transform: scale(1.05); border-color:#ff9d4d; }
   .suspect.selected { border-color:#e85d04; background:#ffe4c4; }
+  .suspect.crossed { opacity: 0.35; text-decoration: line-through; }
   .emoji { font-size: 3em; }
+  .facts-list { text-align:left; font-size:0.9em; color:#555; margin-top:8px; }
   button {
     background:#ff9d4d;
     color:white;
@@ -52,15 +49,16 @@
     cursor:pointer;
     font-weight:bold;
     margin-top:15px;
+    margin-right: 10px;
   }
   button:hover { background:#e85d04; }
   #result {
     display:none;
-    text-align:center;
-    font-size:1.3em;
+    font-size:1.1em;
     padding:20px;
     border-radius:16px;
     margin-top:15px;
+    line-height: 1.6;
   }
   .win { background:#d4f7dc; color:#1a7431; }
   .lose { background:#ffd6d6; color:#a11d1d; }
@@ -68,99 +66,3 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>🍪 The Case of the Missing Cookies! 🕵️</h1>
-  <p class="subtitle">Someone ate all the cookies from the cookie jar. Can you find out who?</p>
-
-  <div class="card">
-    <h2>🔍 Clues</h2>
-    <ul id="clue-list"></ul>
-  </div>
-
-  <div class="card">
-    <h2>😮 Suspects</h2>
-    <div class="suspects" id="suspects"></div>
-  </div>
-
-  <div class="card">
-    <h2>👉 Make Your Guess!</h2>
-    <p>Click a suspect above, then press the button below.</p>
-    <button id="guessBtn">I Know Who Did It!</button>
-    <div id="result"></div>
-    <button id="playAgain" style="display:none; background:#3aa655;">🔁 Play Again</button>
-  </div>
-</div>
-
-<script>
-  const suspectPool = [
-    { name: "Max the Dog", emoji: "🐶", clue: "Found near the kitchen with crumbs on his paws" },
-    { name: "Grandpa Joe", emoji: "👴", clue: "Was seen sneaking into the kitchen at midnight" },
-    { name: "Little Sister Mia", emoji: "👧", clue: "Had chocolate on her fingers this morning" },
-    { name: "Whiskers the Cat", emoji: "🐱", clue: "Was caught staring guiltily at the empty jar" },
-    { name: "Uncle Tom", emoji: "🧔", clue: "Loves cookies more than anyone in the house" },
-    { name: "The Parrot Rico", emoji: "🦜", clue: "Keeps repeating 'cookies were yummy!'" }
-  ];
-
-  let suspects = [];
-  let culprit = null;
-  let selected = null;
-
-  function shuffle(arr) {
-    return [...arr].sort(() => Math.random() - 0.5);
-  }
-
-  function startGame() {
-    suspects = shuffle(suspectPool).slice(0, 4);
-    culprit = suspects[Math.floor(Math.random() * suspects.length)];
-    selected = null;
-
-    document.getElementById('result').style.display = 'none';
-    document.getElementById('playAgain').style.display = 'none';
-    document.getElementById('guessBtn').style.display = 'inline-block';
-
-    const clueList = document.getElementById('clue-list');
-    clueList.innerHTML = '';
-    suspects.forEach(s => {
-      const li = document.createElement('li');
-      li.textContent = `${s.emoji} ${s.clue}`;
-      clueList.appendChild(li);
-    });
-
-    const container = document.getElementById('suspects');
-    container.innerHTML = '';
-    suspects.forEach(s => {
-      const div = document.createElement('div');
-      div.className = 'suspect';
-      div.innerHTML = `<div class="emoji">${s.emoji}</div><div>${s.name}</div>`;
-      div.addEventListener('click', () => {
-        document.querySelectorAll('.suspect').forEach(el => el.classList.remove('selected'));
-        div.classList.add('selected');
-        selected = s;
-      });
-      container.appendChild(div);
-    });
-  }
-
-  document.getElementById('guessBtn').addEventListener('click', () => {
-    if (!selected) {
-      alert("Pick a suspect first! 🔎");
-      return;
-    }
-    const result = document.getElementById('result');
-    result.style.display = 'block';
-    if (selected.name === culprit.name) {
-      result.className = 'win';
-      result.textContent = `🎉 Correct! ${culprit.emoji} ${culprit.name} really did eat the cookies!`;
-    } else {
-      result.className = 'lose';
-      result.textContent = `❌ Not quite! It was actually ${culprit.emoji} ${culprit.name}.`;
-    }
-    document.getElementById('guessBtn').style.display = 'none';
-    document.getElementById('playAgain').style.display = 'inline-block';
-  });
-
-  document.getElementById('playAgain').addEventListener('click', startGame);
-
-  startGame();
-</script>
-</body>
-</html>
