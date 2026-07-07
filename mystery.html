@@ -66,3 +66,93 @@
 </head>
 <body>
 <div class="wrap">
+  <h1>🍪 The Case of the Missing Cookies! 🕵️</h1>
+  <p class="subtitle">Someone ate all the cookies from the jar on the TOP shelf. Use the facts below to figure out who!</p>
+
+  <div class="card">
+    <h2>🔍 The Facts</h2>
+    <ul id="clue-list">
+      <li>1️⃣ The cookie jar was on the <b>top shelf</b>, and the step-stool was found moved next to the counter.</li>
+      <li>2️⃣ There is a small, <b>kid-sized</b> chocolate fingerprint on the jar.</li>
+      <li>3️⃣ Grandpa Joe's shop receipt proves he was at the store from 2pm–4pm (cookies went missing at 3pm).</li>
+      <li>4️⃣ Mom confirms Uncle Tom was asleep on the couch the whole afternoon.</li>
+      <li>5️⃣ Max the dog has paws, not hands — he can't unscrew a jar lid.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>😮 Suspects</h2>
+    <p style="margin-bottom:10px; color:#666; font-size:0.9em;">Click a suspect below to rule them in or out based on the facts.</p>
+    <div class="suspects" id="suspects"></div>
+  </div>
+
+  <div class="card">
+    <h2>👉 Who Really Did It?</h2>
+    <p>Click your final suspect above, then press the button.</p>
+    <button id="guessBtn">I Solved It!</button>
+    <div id="result"></div>
+    <button id="playAgain" style="display:none; background:#3aa655;">🔁 Play Again</button>
+  </div>
+</div>
+
+<script>
+  const suspects = [
+    { name: "Max the Dog", emoji: "🐶", facts: "Has paws, not hands", culprit: false },
+    { name: "Grandpa Joe", emoji: "👴", facts: "At the store 2pm–4pm", culprit: false },
+    { name: "Little Sister Mia", emoji: "👧", facts: "Home all afternoon, small hands", culprit: true },
+    { name: "Uncle Tom", emoji: "🧔", facts: "Napping on the couch all afternoon", culprit: false }
+  ];
+
+  let selected = null;
+
+  function startGame() {
+    selected = null;
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('playAgain').style.display = 'none';
+    document.getElementById('guessBtn').style.display = 'inline-block';
+
+    const container = document.getElementById('suspects');
+    container.innerHTML = '';
+    suspects.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'suspect';
+      div.innerHTML = `<div class="emoji">${s.emoji}</div><div><b>${s.name}</b></div><div class="facts-list">${s.facts}</div>`;
+      div.addEventListener('click', () => {
+        document.querySelectorAll('.suspect').forEach(el => el.classList.remove('selected'));
+        div.classList.add('selected');
+        selected = s;
+      });
+      container.appendChild(div);
+    });
+  }
+
+  document.getElementById('guessBtn').addEventListener('click', () => {
+    if (!selected) {
+      alert("Pick a suspect first! 🔎 Use the facts to rule people out.");
+      return;
+    }
+    const result = document.getElementById('result');
+    result.style.display = 'block';
+    const culprit = suspects.find(s => s.culprit);
+    if (selected.name === culprit.name) {
+      result.className = 'win';
+      result.innerHTML = `🎉 <b>Correct!</b> ${culprit.emoji} ${culprit.name} did it!<br><br>
+        <b>Why:</b> Grandpa Joe was at the store (fact 3), Uncle Tom was asleep (fact 4), and Max can't use his paws to open a jar (fact 5). That leaves only Mia — who was home, and left a kid-sized fingerprint matching fact 2!`;
+    } else {
+      result.className = 'lose';
+      result.innerHTML = `❌ Not quite! Look again at the facts:<br><br>
+        • Fact 3 rules out <b>Grandpa Joe</b> (he was at the store)<br>
+        • Fact 4 rules out <b>Uncle Tom</b> (he was asleep)<br>
+        • Fact 5 rules out <b>Max</b> (dogs can't open jars)<br>
+        That leaves only one suspect standing. Try again!`;
+    }
+    document.getElementById('guessBtn').style.display = 'none';
+    document.getElementById('playAgain').style.display = 'inline-block';
+  });
+
+  document.getElementById('playAgain').addEventListener('click', startGame);
+
+  startGame();
+</script>
+</body>
+</html>
